@@ -12,6 +12,20 @@ layers_dims = []
 
 
 def sin_problem():
+    """builing an artificial neural network
+    
+    It reads, splits and creates layers of neural network from dataset, and plots the graphs of actual pattern and predicted pattern.
+    
+    parameters
+    
+    ----------
+    none
+    
+    Returns
+    -------
+    none
+    """
+    
     data = pd.read_csv("sin_data.csv")
 
     ann = ANN([1,25,1])
@@ -39,6 +53,20 @@ def sin_problem():
 
 class ANN(object):
     def __init__(self, layers_dims, learning_rate=0.1, lmbda=0.01, beta=0.09):
+        """
+        parameters
+        
+        ----------
+        layers_dims: list
+                A list containing layer dimentions.
+        Learning_rate: float
+                Learning  rate is set to 0.1
+        Lmbda: float
+                Lambda is set to 0.01
+        Beta: float
+                Beta is set to 0.09
+        """
+
         self.parameters = {}
         self.grads = {}
         self.layers_dims = layers_dims
@@ -52,18 +80,74 @@ class ANN(object):
         self.beta = beta
 
     def tanhx(self, data):
+        """applying  tanhx  activation function to data
+        
+        parameters
+        
+        ----------
+        data: dataframe
+            The input dataframe
+            
+        Return
+        ------
+        Array
+            An array of outputs after passing it through tanh activation function.
+        """
+
         output = np.tanh(data)
         return output
 
     def tanhx_der(self, data):
+        """applying derivative to tanhx  function
+        
+        parameters
+        
+        ----------
+        data: dataframe
+            The input dataframe
+        
+        Return
+        ------
+            Returns derivative of tanhx  function.
+        """
+
         return 1 - self.tanhx(data)**2
 
     def io_normalization(self, data):
+        """normalizing data
+        
+        parameters
+        
+        ----------
+        data: dataframe
+            The input dataframe
+            
+        Return
+        ------
+        Dataframe
+            A normalized dataframe.
+        """
+
         for i in data.columns:
             data[i] = (2*data[i] - data.max()[i] - data.min()[i])/(data.max()[i] - data.min()[i])
         return data
+        
 
     def initialize_parameters(self, layer_dims):
+        """initializing the parameters
+        
+        Parameters
+        
+        ----------
+        Layer_dims:  list
+                A list containing  dimensions  of  layers
+                
+        Return
+        ------
+        Dictionary
+               A dictionary with  values  assigned to  the parameters.
+        """
+
         for i in range(1,len(layer_dims)):
             self.parameters["W" + str(i)] = np.random.randn(layer_dims[i],layer_dims[i-1])*0.2
             self.parameters["b" + str(i)] = np.zeros(shape=(layer_dims[i],1))
@@ -73,6 +157,26 @@ class ANN(object):
 
 
     def feedforward(self, input_layer, parameters):
+        """forward  propagation
+        
+        In this step the calculation and storage of intermediate variables(including      outputs) for neural network in order from the input layer to output layer is done.
+In  other  words, passing information from one layer to another(it proceeds from input layer to output layer)
+        
+        Parameters
+        
+        ----------
+        Input_layer:  array
+                   an array of input layer
+        Parameters:  dictionary
+                    a dictionary of parameters
+                    
+        Returns
+        -------
+        An array and a list
+            An array of outputs 
+                A list of activations
+         """
+
         activations = [input_layer]
         L = len(parameters)//2
         for i in range(1, L):
@@ -85,16 +189,65 @@ class ANN(object):
         return output, activations
 
     def cost_function(self, predictions, outputs):
+        """finding cost function
+        
+        Parameters
+        
+        ----------
+        Predictions:  dictionary
+                a dictionary of predictied values
+        Outputs:  dictionary
+                a dictionary of outputs
+        
+        Returns
+        -------
+            Returns cost or error  i.e the difference between the predicted output and the actual output.
+         """
+
         print("found cost")
         self.train_cost = (1/1000)*(outputs-predictions)**2/2
         return (1/1000)*(outputs-predictions)**2/2
 
     def cost_validation(self, predictions, outputs):
+        """validating  cost
+        
+        Parameters
+        
+        ----------
+        Predictions:  dictionary
+                a dictionary of predicted values.
+        Outputs:  dictionary
+                a dictionary of outputs.
+        Returns
+        -------
+            Returns cost or error  i.e the difference between the predicted output and the actual output  of  validation data.
+        """
+
         print("found cost")
         self.val_cost = (1/1000)*((outputs-predictions)**2/2)
         return (1/1000)*((outputs-predictions)**2/2)
 
     def backprop(self, actual_outputs, outputs, activation_cache):
+        """back propagation
+        
+        calculation of  gradient of a loss function with respects to all the weights in the network is done.
+        
+        Parameters
+        
+        ----------
+        actual_outputs: array
+                    an array of actual outputs
+        outputs: array
+               an array of predicted outputs.
+        activation_cache: list
+                        list of inputs , activations and outputs.
+        
+        Returns
+        -------
+        dictionary
+            a dictionary of  gradients.
+        """
+
         L = len(self.parameters)//2
         self.grads["dZ" + str(L)] = outputs - actual_outputs
         self.grads["dW" + str(L)] = (1/1000)*np.matmul(self.grads["dZ" + str(L)], activation_cache[L-1].T)
@@ -120,6 +273,23 @@ class ANN(object):
         """
         Takes care of regularization and momentum too
         """
+        
+        """updating parameters
+        
+        updates parameters by considering gradients and learning rate
+        
+        Parameters
+        
+        ----------
+        Learning_rate: float
+            learning rate is set to 0.1
+            
+        Returns
+        -------
+        Dictionary
+            A dictionary consisting of  updated parameters.
+        """
+ 
         for i in range(0, len(self.parameters)//2):
             #print(i)
             #dW = self.momentum_term(self.grads["dW" + str(i+1)], self.parameters["W" + str(i+1)])
@@ -130,6 +300,23 @@ class ANN(object):
 
 
     def train_model(self, input, output, epochs):
+        """training the model
+        
+        Prarmeters
+        
+        ----------
+        Input: dataframe
+            input dataframe
+        Output: dataframe
+            output dataframe     
+        Epochs: int
+            number of epochs
+        Returns
+        -------
+        Dictionary 
+            a dictionary consisting of all the parameters
+        """
+
         parameters = self.initialize_parameters(self.layers_dims)
 
         actual_output = output.values.reshape(self.layers_dims[-1], output.shape[0])
@@ -154,6 +341,21 @@ class ANN(object):
         return parameters
 
     def split_dataset(self, data):
+        """splitting the dataset
+        
+        splits the actual dataset into train dataset , test dataset and validation dataset.
+        
+        Parameters
+        
+        ----------
+        Data: list
+            a list of input data
+        Returns
+        -------
+        Dataframes: train , test  and  val
+                Returns validation dataset , train dataset and test dataset.
+        """
+
         actual = data
         data_indices = [i for i in range(len(data))]
         test_indices = random.sample(range(len(data)), int(0.1*len(data)))
@@ -181,6 +383,22 @@ class ANN(object):
         return train, val, test
 
     def rms_error(self, outputs, predictions):
+        """finding rms error
+        
+        Parameters
+        
+        ----------
+        Outputs: list
+                list of outputs
+        Predictions: list
+                list of predictions
+                
+        Returns
+        -------
+        float
+            root mean square error.
+        """
+
         ms_sum = 0
         for op, pred in zip(outputs, predictions):
             ms_sum += (output[i] - predictions[i])**2
